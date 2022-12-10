@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!-- The Notices and Disclaimers for Ocean Worlds Autonomy Testbed for Exploration
+     Research and Simulation can be found in README.md in the root directory of
+     this repository. -->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="material_script">
+    <script>
+      <uri>$(find ow_lander)/materials/scripts</uri>
+      <uri>$(find ow_lander)/materials/textures</uri>
+      <name>ow/lander</name>
+    </script>
+  </xacro:macro>
+
+</robot>

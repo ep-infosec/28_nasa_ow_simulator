@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- specify the planning pipeline -->
+  <arg name="pipeline" default="ompl" />
+  
+  <!-- Stowed arm joint positions -->
+  <arg name="stowed_shou_yaw" default="0" />
+  <arg name="stowed_shou_pitch" default="0" />
+  <arg name="stowed_prox_pitch" default="0" />
+  <arg name="stowed_dist_pitch" default="0" />
+  <arg name="stowed_hand_yaw" default="0" />
+  <arg name="stowed_scoop_yaw" default="0" />
+  <arg name="stowed_grinder_yaw" default="0" />
+
+  <group ns="planning">
+    <arg name="debug" default="false" />
+    <arg name="use_gui" default="false" />
+    <arg name="use_rviz" default="true" />
+
+    <include file="$(find ow_lander)/launch/planning_context.launch">
+      <arg name="load_robot_description" value="true"/>
+    </include>
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <param name="use_gui" value="$(arg use_gui)"/> <!-- deprecated param -->
+      <param name="zeros/j_shou_yaw" value="$(arg stowed_shou_yaw)"/>
+      <param name="zeros/j_shou_pitch" value="$(arg stowed_shou_pitch)"/>
+      <param name="zeros/j_prox_pitch" value="$(arg stowed_prox_pitch)"/>
+      <param name="zeros/j_dist_pitch" value="$(arg stowed_dist_pitch)"/>
+      <param name="zeros/j_hand_yaw" value="$(arg stowed_hand_yaw)"/>
+      <param name="zeros/j_scoop_yaw" value="$(arg stowed_scoop_yaw)"/>
+      <param name="zeros/j_grinder" value="$(arg stowed_grinder_yaw)"/>
+      <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+    </node>
+
+    <!-- Given the published joint states, publish tf for the robot links -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
+
+    <!-- == movegroup, used to control the arm ========== -->
+    <include file="$(find ow_lander)/launch/move_group.launch">
+      <arg name="allow_trajectory_execution" value="true"/>
+      <arg name="fake_execution" value="true"/>
+      <arg name="info" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+      <arg name="pipeline" value="$(arg pipeline)"/>
+    </include>
+
+    <!-- Run Rviz and load the default config to see the state of the move_group node -->
+    <include file="$(find ow_lander)/launch/moveit_rviz.launch" if="$(arg use_rviz)">
+      <arg name="rviz_config" value="$(find ow_lander)/config/moveit.rviz"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>
+    
+  </group>
+
+</launch>

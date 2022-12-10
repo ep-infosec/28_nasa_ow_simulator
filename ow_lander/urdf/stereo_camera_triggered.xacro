@@ -1,0 +1,219 @@
+<?xml version="1.0"?>
+
+<!-- The Notices and Disclaimers for Ocean Worlds Autonomy Testbed for Exploration
+     Research and Simulation can be found in README.md in the root directory of
+     this repository. -->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="stereo_camera">
+
+  <xacro:property name="Camera01Name"       value="StereoCamera" /> 
+  <xacro:property name="Camera01UpdateRate" value="5" />
+  <xacro:property name="camera_baseline"    value="0.2" />
+  <xacro:property name="camera_head_mass"   value="0.1" />
+
+  <xacro:property name="deg_to_rad"         value="0.0174533" />
+
+  <xacro:include filename="$(find ow_lander)/urdf/material_script.xacro" />
+
+  <xacro:macro name="stereo_camera" params="stereo_camera_parent_link hfov img_w img_h update_rate off_x off_y off_z off_R off_P off_Y vis_mask">
+
+  <link name="${Camera01Name}_head_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0"  rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 ${camera_baseline} 0.025"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.9 0.7 0.2 1" />
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 ${camera_baseline/2} 0"  rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.9 0.7 0.2 1" />
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 -${camera_baseline/2} 0"  rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.9 0.7 0.2 1" />
+      </material>
+    </visual>
+    <inertial>
+      <mass value="${camera_head_mass}" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+          ixx="${camera_head_mass / 12.0 * (camera_baseline*camera_baseline + 0.1*0.1)}" ixy="0.0" ixz="0.0"
+          iyy="${camera_head_mass / 12.0 * (0.1*0.1 + 0.1*0.1)}" iyz="0.0"
+          izz="${camera_head_mass / 12.0 * (camera_baseline*camera_baseline + 0.1*0.1)}"/>
+   </inertial>
+  </link>
+  <joint name="${Camera01Name}_joint" type="fixed">
+    <parent link="${stereo_camera_parent_link}"/>
+    <child link="${Camera01Name}_head_link"/>
+    <origin xyz="${off_x} ${off_y} ${off_z}" rpy="${off_R} ${off_P} ${off_Y}" />
+  </joint>
+  
+  <gazebo reference="${Camera01Name}_head_link">
+    <visual>
+      <material>
+        <diffuse>0.9 0.7 0.2 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+  </gazebo>
+
+  <!-- example for stereo setup is here: -->
+  <!-- https://bitbucket.org/osrf/drcsim/src/52a691b8956045442ef22ba0aaee4520716807ff/multisense_sl_description/urdf/multisense_sl.urdf?at=default#cl-200 -->
+  <!-- https://bitbucket.org/osrf/drcsim/src/52a691b8956045442ef22ba0aaee4520716807ff/drcsim_gazebo/launch/atlas_bringup.launch?at=default#cl-38 -->
+
+  <link name="${Camera01Name}Left_link"/>
+  <link name="${Camera01Name}Left_optical_frame"/>
+  <joint name="leftCamera_joint" type="fixed">
+    <origin xyz="0.0 ${camera_baseline/2} 0.0" rpy="0 0 0"/>
+    <parent link="${Camera01Name}_head_link"/>
+    <child link="${Camera01Name}Left_link"/>
+  </joint>
+  <joint name="leftCamera_optical_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="-${pi/2} 0 -${pi/2}"/>
+    <parent link="${Camera01Name}Left_link"/>
+    <child link="${Camera01Name}Left_optical_frame"/>
+  </joint>
+
+  <link name="${Camera01Name}Right_link"/>
+  <link name="${Camera01Name}Right_optical_frame"/>
+  <joint name="rightCamera_joint" type="fixed">
+    <origin xyz="0.0 -${camera_baseline/2} 0.0" rpy="0 0 0"/>
+    <parent link="${Camera01Name}_head_link"/>
+    <child link="${Camera01Name}Right_link"/>
+  </joint>
+  <joint name="rightCamera_optical_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="-${pi/2} 0 -${pi/2}"/>
+    <parent link="${Camera01Name}Right_link"/>
+    <child link="${Camera01Name}Right_optical_frame"/>
+  </joint>
+  
+  <gazebo reference="${Camera01Name}Left_link">
+    <sensor type="multicamera" name="${Camera01Name}">
+      <update_rate>${update_rate}</update_rate>
+      <always_on>0</always_on>
+      <camera name="left">
+        <horizontal_fov>${hfov*deg_to_rad}</horizontal_fov>
+        <image>
+          <width>${img_w}</width>
+          <height>${img_h}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>200000</far>
+        </clip>
+      </camera>
+
+      <camera name="right">
+        <pose>0 -${camera_baseline} 0 0 0 0</pose>
+         <horizontal_fov>${hfov*deg_to_rad}</horizontal_fov>
+        <image>
+          <width>${img_w}</width>
+          <height>${img_h}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>200000</far>
+        </clip>
+      </camera>
+
+      <plugin name="stereo_camera_controller" filename="libgazebo_ros_triggered_multicamera.so">
+        <cameraName>${Camera01Name}</cameraName>
+        <alwaysOn>true</alwaysOn>
+        <triggerTopicName>image_trigger</triggerTopicName>
+        <updateRate>0</updateRate>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>${Camera01Name}Left_optical_frame</frameName>
+        <hackBaseline>${camera_baseline}</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+      <plugin name="LensFlare" filename="libOWLensFlareSensorPlugin.so">
+        <compositor>CameraLensFlare/PF_FLOAT32_R</compositor>
+      </plugin>
+      <plugin name="CameraSim" filename="libIRGCameraSimSensorPlugin.so" >
+        <exposure>0.05</exposure>
+        <energy_conversion>0.005</energy_conversion>
+      </plugin>
+    </sensor>
+  </gazebo>  
+  
+  <!-- "Center Camera" for "video" -->
+  <link name="${Camera01Name}Center_link"/>
+  <link name="${Camera01Name}Center_optical_frame"/>
+  <joint name="CenterCamera_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <parent link="${Camera01Name}_head_link"/>
+    <child link="${Camera01Name}Center_link"/>
+  </joint>
+  <joint name="CenterCamera_optical_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="-${pi/2} 0 -${pi/2}"/>
+    <parent link="${Camera01Name}Center_link"/>
+    <child link="${Camera01Name}Center_optical_frame"/>
+  </joint>
+  
+  <gazebo reference="${Camera01Name}Center_link">
+    <material>Gazebo/Blue</material>
+    <sensor type="camera" name="${Camera01Name}Video">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>${hfov*deg_to_rad}</horizontal_fov>
+        <image>
+          <width>${img_w/2}</width>
+          <height>${img_h/2}</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>200000</far>
+        </clip>
+      </camera>
+      <plugin name="lensflare" filename="libOWLensFlareSensorPlugin.so">
+        <compositor>CameraLensFlare/PF_FLOAT32_R</compositor>
+      </plugin>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>${Camera01Name}Video</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>CenterCamera_optical_joint</frameName>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  </xacro:macro>
+</robot>
+

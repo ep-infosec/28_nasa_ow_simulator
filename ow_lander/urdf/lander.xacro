@@ -1,0 +1,954 @@
+<?xml version="1.0"?>
+
+<!-- The Notices and Disclaimers for Ocean Worlds Autonomy Testbed for Exploration
+     Research and Simulation can be found in README.md in the root directory of
+     this repository. -->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="lander">
+  <!-- A non-standard bitmask to prevent the lander from rendering into the irradiance environment map -->
+  <xacro:property name="vis_mask" value="0x00010000" />
+
+  <xacro:include filename="$(find ow_lander)/urdf/stereo_camera_triggered.xacro" />
+  <xacro:stereo_camera stereo_camera_parent_link="l_ant_panel"
+                     hfov="21" img_w="1600" img_h="1200" update_rate="1"
+                     off_x="0.53811" off_y="0.07" off_z="0.0" off_R="${pi/2.0}" off_P="${pi}" off_Y="${pi/2.0}"
+                     vis_mask="${vis_mask}" />
+
+  <xacro:include filename="$(find ow_lander)/urdf/lander_lights.xacro" />
+  <xacro:lander_lights lander_lights_parent_link="l_ant_panel"
+                     off_x="0.85" off_y="0.08" off_z="0.0" off_R="-${pi/2.0}" off_P="0.0" off_Y="0.0"
+                     vis_mask="${vis_mask}" />
+
+  <xacro:include filename="$(find ow_lander)/urdf/lander_sample_dock.xacro" />
+  <xacro:lander_sample_dock lander_sample_dock_parent_link="base_link"
+                     off_x="0.5226" off_y="-0.35" off_z="0.32" off_R="-${pi/2.0}" off_P="0.0" off_Y="-${pi/2.0}"
+                     vis_mask="${vis_mask}" />
+
+  <xacro:arg name="freeze_base_link" default="false"/>
+
+  <xacro:if value="$(arg freeze_base_link)">
+    <!-- Rigidly fix robot to world: http://gazebosim.org/tutorials/?tut=ros_urdf#RigidlyFixingAModeltotheWorld
+      "world" special behavior: http://sdformat.org/tutorials?tut=pose_frame_semantics&cat=specification&#specifying-parent-and-child-link-names-for-joints-in-sdf-1-4 -->
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+      <parent link="world"/>
+      <child link="base_link"/>
+    </joint>
+  </xacro:if>
+
+  <link name="base_link">
+    <inertial>
+      <origin
+        xyz="0.002242 0.0014227 0.3241"
+        rpy="0 0 0" />
+      <mass
+        value="921.41" />
+      <inertia
+        ixx="32.997"
+        ixy="-0.36205"
+        ixz="-0.10255"
+        iyy="34.208"
+        iyz="-0.031969"
+        izz="63.349" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="base_link">
+    <visual>
+      <material>
+        <diffuse>0.792 0.819 0.933 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+    <!-- If freezing the lander in place, turn off collisions with the terrain
+         because these collisions cause strange physics side effects. For this
+         to work, the terrain must use a different collide_bitmask. -->
+    <xacro:if value="$(arg freeze_base_link)">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>0x0002</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </xacro:if>
+  </gazebo>
+  <link name="l_shou">
+    <inertial>
+      <origin
+        xyz="0.0591309542444923 0.00156004002922039 -0.0211248119973624"
+        rpy="0 0 0" />
+      <mass
+        value="7.0292" />
+      <inertia
+        ixx="0.024707226"
+        ixy="0.001106126"
+        ixz="0.008780403"
+        iyy="0.053430638"
+        iyz="0.000231645"
+        izz="0.050909058" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_shou.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_shou_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_shou">
+    <visual>
+      <material>
+        <diffuse>0.898 0.917 0.929 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+  </gazebo>
+  <joint
+    name="j_shou_yaw"
+    type="revolute">
+    <origin
+      xyz="0.79 0.175 0.27"
+      rpy="-3.1416 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="l_shou" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" friction="2.6"/>
+    <limit effort="70.9" velocity="0.15" lower="-1.56" upper="1.43"/>
+  </joint>
+  <transmission name="shou_yaw_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_shou_yaw">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="shou_yaw_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <link name="l_prox">
+    <inertial>
+      <origin
+        xyz="0.162254123421932 -1.66533453693773E-16 -0.104457937721983"
+        rpy="0 0 0" />
+      <mass
+        value="3.98552" />
+      <inertia
+        ixx="0.010948108"
+        ixy="0.000000123"
+        ixz="-0.016431513"
+        iyy="0.140543709"
+        iyz="0"
+        izz="0.141291863" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_prox.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_prox_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_prox">
+    <visual>
+      <material>
+        <diffuse>0.898 0.917 0.929 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+  </gazebo>
+  <joint
+    name="j_shou_pitch"
+    type="revolute">
+    <origin
+      xyz="0.16 0 0"
+      rpy="1.5708 -2.4652E-32 0" />
+    <parent
+      link="l_shou" />
+    <child
+      link="l_prox" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" friction="4.6"/>
+    <limit effort="101.0" velocity="0.2" lower="-0.4" upper="2.2"/>
+  </joint>
+  <transmission name="shou_pitch_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_shou_pitch">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="shou_pitch_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <link name="l_dist">
+    <inertial>
+      <origin
+        xyz="0.221081948151538 -5.55111512312578E-16 -0.0307957719833337"
+        rpy="0 0 0" />
+      <mass
+        value="7.67831" />
+      <inertia
+        ixx="0.02219061"
+        ixy="0.000000071"
+        ixz="0.021706466"
+        iyy="0.50510019"
+        iyz="0"
+        izz="0.497745918" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_dist.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_dist_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_dist">
+    <visual>
+      <material>
+        <diffuse>0.898 0.917 0.929 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+  </gazebo>
+  <joint
+    name="j_prox_pitch"
+    type="continuous">
+    <origin
+      xyz="0.53 0 0"
+      rpy="9.7855E-17 0 -4.9304E-32" />
+    <parent
+      link="l_prox" />
+    <child
+      link="l_dist" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" friction="2.7"/>
+    <limit effort="73.0" velocity="0.2" lower="-3.2" upper="3.2"/>
+  </joint>
+  <transmission name="prox_pitch_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_prox_pitch">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="prox_pitch_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <link name="l_wrist">
+    <inertial>
+      <origin
+        xyz="0.0815501188839358 0.00258480207251011 -0.0286945140138527"
+        rpy="0 0 0" />
+      <mass
+        value="4.20589" />
+      <inertia
+        ixx="0.013575388"
+        ixy="-0.000000011"
+        ixz="0.010276112"
+        iyy="0.041535122"
+        iyz="0.00000001"
+        izz="0.040985679" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_wrist.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_wrist_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_wrist">
+    <visual>
+      <material>
+        <diffuse>0.898 0.917 0.929 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+  </gazebo>
+  <joint
+    name="j_dist_pitch"
+    type="continuous">
+    <origin
+      xyz="0.586 0 -0.15"
+      rpy="3.1416 2.1341E-16 1.5708" />
+    <parent
+      link="l_dist" />
+    <child
+      link="l_wrist" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics damping="50.0" friction="0.3"/>
+    <limit effort="25.7" velocity="0.2" lower="-2.2" upper="3.65" />
+  </joint>
+  <transmission name="dist_pitch_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_dist_pitch">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="dist_pitch_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <gazebo reference="j_dist_pitch">
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+  <gazebo>
+    <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
+      <jointName>j_dist_pitch</jointName>
+      <topicName>/_original/ft_sensor_dist_pitch</topicName>
+      <updateRate>200</updateRate>  <!-- Barret F/T sensor runs at 250 Hz and has max update rate of 2500 Hz
+                                         However, the gazebo_ros_ft_sensor plugin is only able to run at a max of 200 -->
+      <gaussianNoise>0.2</gaussianNoise> <!-- estimated based on a profile of the barret ft sensor -->
+    </plugin>
+  </gazebo>
+  <link name="l_hand">
+    <inertial>
+      <origin
+        xyz="-0.00481701429042641 -3.3345796601747E-07 0.076155053161125"
+        rpy="0 0 0" />
+      <mass
+        value="6.56759" />
+      <inertia
+        ixx="0.031145341"
+        ixy="-0.000000019"
+        ixz="0.000003178"
+        iyy="0.03114165"
+        iyz="0.000000034"
+        izz="0.021681969" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_hand.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_hand_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_hand">
+    <visual>
+      <material>
+        <diffuse>0.898 0.917 0.929 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+    <!-- Keep the collision between the terrain and the hand turned off as it
+         results in a slower simulation and worse physics. -->
+
+    <collision>
+      <surface>
+        <contact>
+          <collide_bitmask>0x0002</collide_bitmask>
+        </contact>
+      </surface>
+    </collision>
+
+  </gazebo>
+
+  <joint
+    name="j_hand_yaw"
+    type="continuous">
+    <origin
+      xyz="0.163 0.2 0"
+      rpy="1.5708 2.8911E-17 -3.228E-16" />
+    <parent
+      link="l_wrist" />
+    <child
+      link="l_hand" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" friction="0.3"/>
+    <limit effort="25.7" velocity="0.2" lower="-3.2" upper="3.2"/>
+  </joint>
+  <transmission name="hand_yaw_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_hand_yaw">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="hand_yaw_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <link name="l_scoop">
+    <inertial>
+      <origin
+        xyz="0.00131473194901655 -1.3855583347322E-13 0.0453283797652499"
+        rpy="0 0 0" />
+      <mass
+        value="0.30936" />
+      <inertia
+        ixx="0.001031142"
+        ixy="0"
+        ixz="0.000157564"
+        iyy="0.001225161"
+        iyz="0"
+        izz="0.000591262" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_scoop.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <!-- scoop bottom -->
+    <collision>
+      <origin 
+        xyz="0.030115 0 0.076505"
+        rpy="0 -0.0349040838 0" />
+      <geometry>
+          <box size="0.1273 0.0818 0.002"/>
+      </geometry>
+    </collision>
+    <!-- scoop backing (flat) -->
+    <collision>
+      <origin 
+        xyz="-0.032195 0 0.036854"
+        rpy="0 -1.60570041059 0" />
+      <geometry>
+          <box size="0.0749 0.0818 0.002"/>
+      </geometry>
+    </collision>
+    <!-- scoop left sidewall -->
+    <collision>
+      <origin 
+        xyz="0.025676 -0.0409 0.038875"
+        rpy="1.5708 -0.0349040838 0" />
+      <geometry>
+          <box size="0.1158 0.0749 0.002"/>
+      </geometry>
+    </collision>
+    <!-- scoop right sidewall -->
+    <collision>
+      <origin 
+        xyz="0.025676 0.0409 0.038875"
+        rpy="1.5708 -0.0349040838 0" />
+      <geometry>
+          <box size="0.1158 0.0749 0.002"/>
+      </geometry>
+    </collision>
+    <!-- scoop top -->
+    <collision>
+      <origin 
+        xyz="0.000264 0 0.000512"
+        rpy="0 -0.0349040838 0" />
+      <geometry>
+          <box size="0.06234 0.0818 0.002"/>
+      </geometry>
+    </collision>
+    <!-- scoop wide tip -->
+    <collision>
+      <origin 
+        xyz="0.090908 0 0.079513"
+        rpy="0 -0.254542712 0" />
+      <geometry>
+          <box size="0.008122 0.0818 0.002"/>
+      </geometry>
+    </collision>
+    <!-- scoop wide tip -->
+    <collision>
+      <origin 
+        xyz="0.092572 0 0.079946"
+        rpy="0 -0.254542712 0" />
+      <geometry>
+          <box size="0.01156 0.04346 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_scoop">
+    <visual>
+      <material>
+        <diffuse>0.898 0.917 0.929 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+    <collision>
+      <surface>
+        <contact>
+          <collide_bitmask>0x0001</collide_bitmask> <!-- Enable collision with the terrain by matching the bitmask -->
+          <ode>
+            <kd>1e12</kd>
+          </ode>
+        </contact>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- link that we can reference in Gazebo to get altitude of tip
+       of scoop above the terrain. Note that without an inertial
+       tag, the link will not show up in the SDF/Gazebo at all -->
+  <link name="l_scoop_tip">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+  </link>
+  <joint name="l_scoop_tip_joint" type="fixed">
+    <origin xyz="0.1 0.0 0.08" rpy="0 0 0"/>
+    <parent link="l_scoop"/>
+    <child link="l_scoop_tip"/>
+  </joint>
+  <gazebo reference="l_scoop_tip_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <joint
+    name="j_scoop_yaw"
+    type="continuous">
+    <origin
+      xyz="0.15 0 0"
+      rpy="1.5708 -1.1102E-16 1.5708" />
+    <parent
+      link="l_hand" />
+    <child
+      link="l_scoop" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" friction="0.5"/>
+    <limit effort="20.0" velocity="0.2" lower="-3.2" upper="3.2"/>
+  </joint>
+  <transmission name="scoop_yaw_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_scoop_yaw">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="scoop_yaw_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <link name="l_grinder">
+    <inertial>
+      <origin
+        xyz="0 0 0.06"
+        rpy="0 0 0" />
+      <mass
+        value="0.5" />
+      <inertia
+        ixx="0.002"
+        ixy="0"
+        ixz="0"
+        iyy="0.002"
+        iyz="0"
+        izz="0.002" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_grinder.STL" />
+      </geometry>
+      <material
+       name="">
+       <color
+         rgba="0.6 0.6 0.6 1" />
+     </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0.08 0 0"
+        rpy="1.57 1.57 1.57" />
+      <geometry>
+        <cylinder radius="0.04" length="0.16"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin
+        xyz="0.06 0 0"
+        rpy="1.57 1.57 1.57" />
+      <geometry>
+        <cylinder radius="0.05" length="0.12"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin
+        xyz="0.04 0 0"
+        rpy="1.57 1.57 1.57" />
+      <geometry>
+        <cylinder radius="0.06" length="0.08"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin
+        xyz="0.02 0 0"
+        rpy="1.57 1.57 1.57" />
+      <geometry>
+        <cylinder radius="0.07" length="0.04"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin
+        xyz="0.005 0 0"
+        rpy="1.57 1.57 1.57" />
+      <geometry>
+        <cylinder radius="0.075" length="0.01"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_grinder">
+    <visual>
+      <material>
+        <diffuse>0.6 0.6 0.6 1</diffuse>
+        <specular>0.2 0.2 0.2 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+    <collision>
+      <surface>
+        <contact>
+          <collide_bitmask>0x0001</collide_bitmask> <!-- Enable collision with the terrain by matching the bitmask -->
+          <ode>
+            <kp>1e+10</kp>
+            <kd>1e+10</kd>
+          </ode>
+        </contact>
+      </surface>
+    </collision>
+  </gazebo>
+  <joint 
+    name="j_grinder" 
+    type="revolute">
+    <origin xyz="-0.075 -0.129903811 0" rpy="0 0 ${-pi*2/3}" />
+    <parent link="l_hand" />
+    <child link="l_grinder" />
+    <axis xyz="-1 0 0" />
+    <dynamics damping="1" />
+    <limit effort="1.0" velocity="0.1" lower="-3.2" upper="3.2"/>
+  </joint>
+  <transmission name="grinder_yaw_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_grinder">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="grinder_yaw_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <link name="l_ant_foot">
+    <inertial>
+      <origin
+        xyz="-2.24681384608516E-13 8.58202398035246E-14 -0.144967812675424"
+        rpy="0 0 0" />
+      <mass
+        value="0.939669875432375" />
+      <inertia
+        ixx="0.0128625280820728"
+        ixy="-0.0550577074342039"
+        ixz="4.59706499938512E-09"
+        iyy="0.252496809842602"
+        iyz="4.83511231053058E-10"
+        izz="0.265359337924673" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_ant_foot.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.294117647058824 0.294117647058824 0.294117647058824 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_ant_foot_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_ant_foot">
+    <visual>
+      <material>
+        <diffuse>0.294 0.294 0.294 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+  </gazebo>
+  <joint
+    name="j_ant_pan"
+    type="continuous">
+    <origin
+      xyz="0 0.58 0.675"
+      rpy="-3.1416 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="l_ant_foot" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" />
+    <limit effort="80.0" velocity="0.2" lower="-3.2" upper="3.2" />
+  </joint>
+  <transmission name="ant_pan_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_ant_pan">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="ant_pan_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <link name="l_ant_panel">
+    <inertial>
+      <origin
+        xyz="0.471831233065397 0.106375900601898 -0.000999999214864045"
+        rpy="0 0 0" />
+      <mass
+        value="16.0257517514408" />
+      <inertia
+        ixx="0.0128625280820728"
+        ixy="-0.0550577074342039"
+        ixz="4.59706499938512E-09"
+        iyy="0.252496809842602"
+        iyz="4.83511231053058E-10"
+        izz="0.265359337924673" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_ant_panel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.294117647058824 0.294117647058824 0.294117647058824 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ow_lander/meshes/l_ant_panel_col.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="l_ant_panel">
+    <visual>
+      <material>
+        <diffuse>0.294 0.294 0.294 1</diffuse>
+        <specular>0.4 0.4 0.4 1</specular>
+        <xacro:material_script />
+      </material>
+      <plugin name="visibility" filename="libIRGVisibilityPlugin.so">
+        <visibility_bitmask>${vis_mask}</visibility_bitmask>
+      </plugin>
+    </visual>
+    <selfCollide>1</selfCollide>
+  </gazebo>
+  <joint
+    name="j_ant_tilt"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.24805"
+      rpy="3.1416 1.5708 0" />
+    <parent
+      link="l_ant_foot" />
+    <child
+      link="l_ant_panel" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="50.0" />
+    <limit effort="100.0" velocity="0.2" lower="-1.57" upper="1.57"/>
+  </joint>
+  <transmission name="ant_tilt_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="j_ant_tilt">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="ant_tilt_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+
+    <plugin name="ow_faults_injection_joints" filename="libow_faults_injection_joints.so">
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+
+    <plugin name="BalovnevModelPlugin" filename="libBalovnevModelPlugin.so">
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+    <!-- Publish joint states so rviz can visualize them. -->
+    <!--plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+      <jointName>j_shou_yaw, j_shou_pitch, j_prox_pitch, j_dist_pitch,
+       j_hand_yaw, j_scoop_yaw, j_ant_pan, j_ant_tilt</jointName>
+      <updateRate>10</updateRate>
+    </plugin-->
+  </gazebo>
+</robot>

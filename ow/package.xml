@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ow</name>
+  <version>0.0.0</version>
+  <description>OceanWATERS's ow_simulator repository top level package</description>
+
+  <maintainer email="people@nasa.gov">people</maintainer>
+
+  <license>NASA OPEN SOURCE AGREEMENT VERSION 1.3</license>
+  
+</package>
